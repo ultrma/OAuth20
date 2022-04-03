@@ -3,6 +3,9 @@ using OAuth20.LineClient.Models;
 using OAuth20.Web.Services;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions());
+builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+builder.Configuration.AddJsonFile("appsettings.Development.json", optional: true);
+builder.Configuration.AddEnvironmentVariables();
 
 // Add services to the container.
 builder.Services.AddRazorPages();
