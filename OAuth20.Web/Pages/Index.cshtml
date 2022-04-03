@@ -1,0 +1,10 @@
+﻿@page
+@using  OAuth20.Web.Services
+@model IndexModel
+@inject IUserService _userService;
+@{
+    ViewData["Title"] = "Send message";
+    var lineLoginAuthorizeURL = _userService.GetLineLoginAuthorizeURL();
+}
+
+<a href="@lineLoginAuthorizeURL"><img src="~/img/btn_login_base.png" /></a>

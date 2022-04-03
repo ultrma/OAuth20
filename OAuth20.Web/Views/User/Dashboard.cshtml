@@ -1,0 +1,14 @@
+﻿<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+@using OAuth20.Web.Models
+@model OAuth20.Web.Models.User
+@{
+    var user = Model;
+}
+
+<H3>Hi, @user.Name</H3>
+<H3>You have <span style="color:green">successfully</span> <b>subscribed</b> this channel.</H3>
+<br/>
+
+<br />
+<H3>If you would like to be <b>revoked</b>, please click <a class="btn btn-danger" href="/user/unsubscribe?accessToken=@user.AccessToken">Unsubscribe!</a></H3>
+

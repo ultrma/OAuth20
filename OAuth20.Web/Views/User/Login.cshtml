@@ -1,0 +1,13 @@
+﻿@using OAuth20.Web.Models
+@using OAuth20.Web.Services
+@model OAuth20.Web.Models.User
+@inject IUserService _userService;
+@{
+    var user = Model;
+    var lineNotifyAuthorizeURL = _userService.GetLineNotifiyAuthorizeURL();
+}
+
+<div>Hi,  @user.Name <img src=@user.Picture width="128" height="128" /></div>
+<br />
+If you would like to receive notification, please subscribe at here.
+<a href="@lineNotifyAuthorizeURL"><img src="~/img/btn_notify_base.png" /></a>
