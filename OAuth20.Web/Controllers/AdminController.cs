@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using OAuth20.Web.Models;
 using OAuth20.Web.Services;
 
 namespace OAuth20.Web.Controllers
 {
-    [Route("admin")]
+    [Authorize(Roles ="Admin")]
+    [Route("[controller]")]
     public class AdminController : Controller
     {
         private readonly IUserService _userService;
@@ -12,7 +14,7 @@ namespace OAuth20.Web.Controllers
         {
             _userService = userService;
         }
-
+        
         [HttpGet]
         public ActionResult Subscriptions()
         {
@@ -39,10 +41,10 @@ namespace OAuth20.Web.Controllers
             }
         }
 
-        [HttpGet("revoke/{accessToken}")]
-        public async Task<ActionResult> Revoke([FromRoute] string accessToken)
+        [HttpGet("revoke/{sessionKey}")]
+        public async Task<ActionResult> Revoke([FromRoute] string sessionKey)
         {
-            await _userService.Unsubscribe(accessToken);
+            await _userService.Unsubscribe(sessionKey);
             return Subscriptions();
 
         }

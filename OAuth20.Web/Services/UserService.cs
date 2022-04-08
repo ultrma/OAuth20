@@ -1,6 +1,6 @@
-﻿using OAuth20.LineClient.Services;
+﻿using Microsoft.Extensions.Options;
 using OAuth20.LineClient.Models;
-using OAuth20.Web.Pages;
+using OAuth20.LineClient.Services;
 using OAuth20.Web.Models;
 
 namespace OAuth20.Web.Services
@@ -9,25 +9,45 @@ namespace OAuth20.Web.Services
     {
         private readonly ILineLoginClient _lineLoginClient;
         private readonly ILineNotifyClient _lineNotifyClient;
-
-        public UserService (ILineLoginClient lineLoginClient, ILineNotifyClient lineNotifyClient)
+        private readonly AdminSettings _adminSettings;
+        public UserService (ILineLoginClient lineLoginClient, ILineNotifyClient lineNotifyClient, IOptions<AdminSettings> adminSettings)
         {
             _lineLoginClient = lineLoginClient; 
             _lineNotifyClient = lineNotifyClient;
+            _adminSettings = adminSettings.Value;
         }
 
-        public string GetLineLoginAuthorizeURL()
+        public string GetLineLoginAuthorizeURL(string state)
         {
-            return _lineLoginClient.GetAuthorizeURL();
+            return _lineLoginClient.GetAuthorizeURL(state);
         }
 
-        public async Task<User> Login(string code, string state)
+        public async Task<LoginUser> LoginCallback(string code, string state, string sessionKey)
         {
             try
             {
                 var response = await _lineLoginClient.GetTokenResponse(code, state);
                 var lineLoginProfile = response.GetLineLoginProfile();
-                return new User { AccessToken = lineLoginProfile.AccessToken, Name = lineLoginProfile.Name, Picture = lineLoginProfile.Picture};
+
+                var loginUser = LoginUsers.GetValue(sessionKey);
+
+                if (loginUser == null)
+                {
+                    // add this User
+                    loginUser = new LoginUser(oauthProvider: "Line");
+                    loginUser.Id = lineLoginProfile.Id;
+                    loginUser.Name = lineLoginProfile.Name;
+                    loginUser.Picture = lineLoginProfile.Picture;
+                    loginUser.AccessTokenForLogin = lineLoginProfile.AccessToken;
+                    loginUser.IsAdmin = 
+                        _adminSettings.AdminUsers.Any(a => a.Provider == "Line" && a.Id == lineLoginProfile.Id)
+                            ? true 
+                            : false;    
+                }
+
+                LoginUsers.UpdsertLoginUser(loginUser);
+
+                return loginUser;
             }
             catch (Exception ex)
             {
@@ -36,25 +56,20 @@ namespace OAuth20.Web.Services
             }
         }
 
-        public string GetLineNotifiyAuthorizeURL()
+        public string GetLineNotifiyAuthorizeURL(string state)
         {
-            return _lineNotifyClient.GetAuthorizeURL();
+            return _lineNotifyClient.GetAuthorizeURL(state);
         }
 
-        public async Task<User> Subscribe(string code, string state)
+        public async Task<LoginUser> Subscribe(string code, string state, string userId)
         {
             try
             {
                 var accessToken = await _lineNotifyClient.GetAccessToken(code, state);
                 var getTokenStatusResponse = await _lineNotifyClient.GetAccessTokenStatus(accessToken);
 
-                string name = string.Empty;
-                if (LineNotifySubscriptions.TryGetValue(accessToken, out name))
-                    return new User { Name = name, AccessToken = accessToken };
-
-                name = getTokenStatusResponse.Target;
-                LineNotifySubscriptions.Set(accessToken, name);
-                return new User { Name = name, AccessToken=accessToken};
+                LoginUsers.UpdateAccessTokenForNotification(userId, accessToken);
+                return LoginUsers.GetValue(userId);
             }
             catch (Exception ex)
             {
@@ -63,19 +78,26 @@ namespace OAuth20.Web.Services
             }
         }
 
-        public async Task Unsubscribe(string accessToken)
+        public async Task Logout()
+        {
+            string accessToken = "";
+            await Unsubscribe(accessToken);
+        }
+
+        public async Task Unsubscribe(string sessionKey)
         {
             try
             {
-                var getTokenStatusResponse = await _lineNotifyClient.GetAccessTokenStatus(accessToken);
+                var loginUser = LoginUsers.GetValue(sessionKey);
+
+                var getTokenStatusResponse = await _lineNotifyClient.GetAccessTokenStatus(loginUser.AccessTokenForNotification);
 
                 if (getTokenStatusResponse.Status == 401)
                     return;
 
                 if (getTokenStatusResponse.Status == 200)
                 {
-                    LineNotifySubscriptions.Remove(accessToken);
-                    await _lineNotifyClient.RevokeAccessToken(accessToken);
+                    LoginUsers.UpdateAccessTokenForNotification(sessionKey, null);
                 }
             }
             catch (Exception ex)
@@ -89,8 +111,8 @@ namespace OAuth20.Web.Services
         {
             try
             {
-                var tokens = LineNotifySubscriptions.GetKeys();
-                if(tokens.Any())
+                var tokens = LoginUsers.GetAccessTokensForNotification();
+                if (tokens.Any())
                 {
                     foreach(var token in tokens)
                     {
@@ -105,15 +127,13 @@ namespace OAuth20.Web.Services
             }
         }
 
-        public User GetUser(string accessToken)
+        public LoginUser GetUser(string userId)
         {
             try
             {
-                var name = LineNotifySubscriptions.GetValue(accessToken);
-                if (!string.IsNullOrWhiteSpace(name))
-                    return new User { AccessToken = accessToken, Name = name };
-
-                return null;                
+                var loginUser = LoginUsers.GetValue(userId);
+                
+                return loginUser;
             }
             catch (Exception ex)
             {
@@ -124,7 +144,13 @@ namespace OAuth20.Web.Services
 
         public IDictionary<string, string> GetSubscriptions()
         {
-            return LineNotifySubscriptions.GetAll();
+            return LoginUsers.GetAllSubscriptions();
         }
+
+        public string GetLineAPIState()
+        {
+            return DateTime.Now.ToString("sssddMMyyyy");
+        }
+
     }
 }

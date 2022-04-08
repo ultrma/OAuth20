@@ -4,7 +4,7 @@ namespace OAuth20.LineClient.Services
 {
     public interface ILineLoginClient
     {
-        string GetAuthorizeURL();
+        string GetAuthorizeURL(string state);
         Task<LineLoginGetTokenResponse> GetTokenResponse(string code, string state);
     }
 }

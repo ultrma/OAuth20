@@ -1,18 +1,18 @@
-﻿using OAuth20.LineClient.Models;
-using OAuth20.Web.Pages;
-using OAuth20.Web.Models;
+﻿using OAuth20.Web.Models;
 
 namespace OAuth20.Web.Services
 {
     public interface IUserService
     {
-        string GetLineLoginAuthorizeURL();
-        string GetLineNotifiyAuthorizeURL();
-        Task<User> Login(string code, string state);
-        Task<User> Subscribe(string code, string state);
-        Task Unsubscribe(string accessToken);
+        string GetLineAPIState();
+        string GetLineLoginAuthorizeURL(string state);
+        string GetLineNotifiyAuthorizeURL(string state);
+        Task<LoginUser> LoginCallback(string code, string state, string sessionKey);
+        Task<LoginUser> Subscribe(string code, string state, string userId);
+        Task Unsubscribe(string sessionKey);
         Task Notify(string message);
-        User GetUser(string accessToken);
+        LoginUser GetUser(string userId);
         IDictionary<string, string> GetSubscriptions();
+        Task Logout();
     }
 }

@@ -10,7 +10,6 @@
         public string ClientID { get; set; }
         public string ClientSecret { get; set; }
         public string Scope { get; set; }
-        public string State { get; set; }
     }
 }
 

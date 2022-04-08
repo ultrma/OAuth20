@@ -26,6 +26,7 @@ namespace OAuth20.LineClient.Models
             LineLoginProfile lineLoginProfile = new LineLoginProfile();
             lineLoginProfile.Name = tokenS.Claims.First(claim => claim.Type == "name").Value;
             lineLoginProfile.Picture = tokenS.Claims.First(claim => claim.Type == "picture").Value;
+            lineLoginProfile.Id = tokenS.Claims.First(claim => claim.Type == "sub").Value;
             lineLoginProfile.AccessToken = AccessToken;
 
             return lineLoginProfile;

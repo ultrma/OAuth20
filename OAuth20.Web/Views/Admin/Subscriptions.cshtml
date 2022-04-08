@@ -13,7 +13,7 @@
         <b>Current subscriptions</b>
         <ul>
         @foreach (var s in subscriptions)
-            {<li>@s.Value - <a class="btn btn-danger" href="revoke/@s.Key">Revoke</a></li>}
+            {<li>@s.Value - <a class="btn btn-danger" href="/admin/revoke/@s.Key">Revoke</a></li>}
         </ul>
     }
     else
@@ -21,7 +21,8 @@
         <div>No subscriptions.</div>
     }
 }
-
+<br />
+Go back to <a href="/user/profile">profile</a> page.
 
   
    

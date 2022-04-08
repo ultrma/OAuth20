@@ -1,0 +1,27 @@
+﻿@model OAuth20.Web.Models.LoginUser
+@{
+    var user = Model;
+}
+
+<div>Hi,  @user.Name <img src=@user.Picture width="128" height="128" /></div>
+<br />
+<br />
+@if(user.HasSubscribed)
+{
+    <div>You have successfully subscribed to notification service. Click here to <a href="/user/unsubscribe">unsubscribe</a> from it!</div>
+}
+else
+{
+    <div>Please <a href="/user/subscribe">Subscribe</a> to notificiation service.</div>
+ }
+<br />
+@if(user.IsAdmin)
+{
+    <a href="/Admin">Admin management console</a>
+}
+<br />
+<br />
+<div><a href="/user/logout">Click here to logout</a></div>
+
+
+

@@ -15,9 +15,9 @@ namespace OAuth20.LineClient.Services
             _httpClientFactory = httpClientFactory;
         }
 
-        public string GetAuthorizeURL()
+        public string GetAuthorizeURL(string state)
         {
-            return _settings.AuthourizeURL;
+            return _settings.GetAuthorizeURL(state);
         }
 
         public async Task<LineLoginGetTokenResponse> GetTokenResponse(string code, string state)
@@ -44,5 +44,6 @@ namespace OAuth20.LineClient.Services
 
             return tokenResponse;
         }
+
     }
 }
